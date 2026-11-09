@@ -2,7 +2,6 @@ print("Hello World")
 print("My Python project is successfully connected to github")
 
 # Team Leader - V Pavithra - My Branch V-Pavithra
-name = "Pavithra"
 age = 20
 course = "B.Tech"
 project = "Internship Project"
