@@ -87,3 +87,37 @@ Learned how Python functions help organize code into reusable components. Unders
 Understand task broker architecture and asynchronous programming.
 
 **Git Commit ID:** db3875f
+
+---
+
+## Day 3 - Task Broker Basics and Task Execution
+
+**Status:** Completed
+
+**Objective:**
+Understand the basic Task Broker workflow and practice receiving, processing, and executing tasks using Python.
+
+**Files Created or Modified:**
+- `day3_task_broker.py`
+- `WORK_LOG.md`
+
+**Work Performed:**
+- Created a Python practice program to understand the Task Broker workflow.
+- Represented tasks using Python dictionaries.
+- Created an `execute_task()` function to process tasks.
+- Implemented addition, subtraction, and multiplication operations.
+- Used conditional statements to identify the requested operation.
+- Used return statements to send the calculated result back.
+- Executed and tested all three operations successfully.
+
+**Testing and Output:**
+Successfully tested addition (10 + 20 = 30), subtraction (20 - 10 = 10), and multiplication (10 * 5 = 50).
+
+**Learning Outcome:**
+Learned how a basic Task Broker receives task information, identifies an operation, executes it using a function, and returns the result. Improved understanding of Python dictionaries, functions, parameters, conditional statements, and return values.
+
+**Next Day's Plan:**
+Learn asynchronous programming concepts and understand how tasks can be managed in an asynchronous system.
+
+**Git Commit ID:** c966da2
+
