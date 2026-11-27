@@ -119,5 +119,40 @@ Learned how a basic Task Broker receives task information, identifies an operati
 **Next Day's Plan:**
 Learn asynchronous programming concepts and understand how tasks can be managed in an asynchronous system.
 
-**Git Commit ID:** c966da2
+**Git Commit ID:** c966da2  
+---
+
+## Day 4 - Asynchronous Task Processing and Multiple Workers
+
+**Status:** Completed
+
+**Objective:**
+Understand asynchronous programming, task queues, multiple workers, and error handling using Python asyncio.
+
+**Files Created or Modified:**
+- `day4_async_practice.py`
+- `day4_async_task_broker.py`
+- `WORK_LOG.md`
+
+**Work Performed:**
+- Practiced synchronous and asynchronous programming in Python.
+- Learned how to use `async`, `await`, and `asyncio.run()`.
+- Implemented multiple coroutines using `asyncio.gather()`.
+- Measured asynchronous execution time using `time.perf_counter()`.
+- Created a Mini Async Task Broker to process multiple tasks.
+- Implemented input validation and exception handling.
+- Used `asyncio.Queue()` to manage incoming tasks.
+- Created two asynchronous workers using `asyncio.create_task()`.
+- Implemented task completion tracking using `task_done()` and `queue.join()`.
+
+**Testing and Output:**
+Successfully executed the asynchronous task broker with two workers. Tested addition, subtraction, multiplication, division by zero, unsupported operations, invalid input, and missing task fields. Both workers processed tasks successfully, and all seven task responses were collected without crashing the program.
+
+**Learning Outcome:**
+Learned how asynchronous programming allows multiple coroutines to make progress concurrently. Understood how asyncio queues distribute tasks among available workers and how exception handling prevents invalid tasks from crashing the program. Improved understanding of asynchronous task execution, worker management, and result collection.
+
+**Next Day's Plan:**
+Improve task result handling and study how task processing can be organized for the MeshWeaver project.
+
+**Git Commit ID:** Pending                                    
 
