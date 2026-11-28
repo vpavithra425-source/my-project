@@ -77,3 +77,15 @@ The main objective of MeshWeaver is to develop a decentralized asynchronous task
 Conclusion
 
 MeshWeaver demonstrates how asynchronous programming and Peer-to-Peer networking can be combined to build a distributed task execution system.
+## DHT Testing
+
+The DHT module was tested using three peer nodes.
+
+- Tested peer joining using JOIN and PEERS messages.
+- Verified K-Bucket peer storage.
+- Tested iterative FIND_NODE functionality.
+- Verified NODES response handling.
+- Tested failed peer detection using PING timeout.
+- Successfully removed failed peers and added replacement peers.
+
+All DHT tests completed successfully.
