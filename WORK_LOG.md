@@ -189,3 +189,38 @@ Learned how the actual MeshWeaver client sends serialized tasks to a UDP server 
 Study peer discovery and implement the basic Gossip Protocol for sharing information between MeshWeaver peers.
 
 **Git Commit ID:** 659de0e
+
+---
+
+## Day 6 - Gossip Protocol and Peer Resource Sharing
+
+**Status:** Completed
+
+**Objective:**
+Implement a basic asynchronous Gossip Protocol to exchange peer information and share CPU and RAM usage between nodes every five seconds.
+
+**Files Created or Modified:**
+- `project/MeshWeaver/gossip.py`
+- `WORK_LOG.md`
+
+**Work Performed:**
+- Created a separate Gossip Protocol implementation using Python asyncio and UDP communication.
+- Implemented CPU usage monitoring using the Windows GetSystemTimes API through ctypes.
+- Implemented RAM monitoring using the Windows GlobalMemoryStatusEx API.
+- Used JSON messages to exchange peer information and resource statistics.
+- Implemented peer discovery using configured seed peers.
+- Configured the Gossip loop to exchange information every five seconds.
+- Started two local Gossip nodes using different UDP ports.
+- Verified that both nodes could send and receive peer CPU and RAM information.
+
+**Testing and Output:**
+Successfully started two Gossip nodes on localhost using ports 10000 and 10001. Verified bidirectional communication between both nodes. Both nodes received peer information, including CPU and RAM usage, through UDP messages at five-second intervals. CPU and RAM monitoring also worked successfully without installing external libraries.
+
+**Learning Outcome:**
+Learned the basics of the Gossip Protocol, UDP-based peer communication, asynchronous networking, JSON message exchange, and system resource monitoring using Windows APIs. Understood how peers can share their resource information periodically. The current implementation is a locally tested prototype and still needs further validation and integration with the main MeshWeaver architecture.
+
+**Next Day's Plan:**
+Review the Gossip implementation, improve peer information validation, and study how to integrate resource sharing with the existing MeshWeaver architecture.
+
+**Git Commit ID:** Pending
+
