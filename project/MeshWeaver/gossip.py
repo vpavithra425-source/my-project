@@ -3,8 +3,15 @@ import argparse
 import asyncio
 import ctypes
 import json
+import math
 import time
 from ctypes import wintypes
+
+
+GOSSIP_INTERVAL = 5
+PEER_TIMEOUT = 15
+MAX_PEERS = 50
+MAX_MESSAGE_SIZE = 65507
 
 
 # ==========================================
@@ -34,7 +41,6 @@ class CPUMonitor:
         self.previous_times = None
 
     def get_times(self):
-
         idle = FILETIME()
         kernel = FILETIME()
         user = FILETIME()
@@ -50,8 +56,9 @@ class CPUMonitor:
 
         def convert(value):
             return (
-                value.dwHighDateTime << 32
-            ) | value.dwLowDateTime
+                (value.dwHighDateTime << 32)
+                | value.dwLowDateTime
+            )
 
         return (
             convert(idle),
@@ -60,7 +67,6 @@ class CPUMonitor:
         )
 
     def get_cpu_usage(self):
-
         current = self.get_times()
 
         if self.previous_times is None:
@@ -75,9 +81,8 @@ class CPUMonitor:
         idle_delta = new_idle - old_idle
 
         total_delta = (
-            new_kernel - old_kernel
-        ) + (
-            new_user - old_user
+            (new_kernel - old_kernel)
+            + (new_user - old_user)
         )
 
         if total_delta <= 0:
@@ -109,7 +114,6 @@ class MEMORYSTATUSEX(ctypes.Structure):
 
 
 def get_ram_information():
-
     memory = MEMORYSTATUSEX()
     memory.dwLength = ctypes.sizeof(memory)
 
@@ -136,13 +140,83 @@ def get_ram_information():
 
 
 # ==========================================
+# PEER INFORMATION VALIDATION
+# ==========================================
+
+def is_valid_number(value, minimum, maximum):
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and minimum <= value <= maximum
+    )
+
+
+def validate_peer(peer):
+    if not isinstance(peer, dict):
+        return False
+
+    peer_id = peer.get("peer_id")
+    host = peer.get("host")
+    port = peer.get("port")
+
+    if not isinstance(peer_id, str) or not peer_id:
+        return False
+
+    if len(peer_id) > 255:
+        return False
+
+    if not isinstance(host, str) or not host:
+        return False
+
+    if len(host) > 253:
+        return False
+
+    if not isinstance(port, int) or isinstance(port, bool):
+        return False
+
+    if not 1 <= port <= 65535:
+        return False
+
+    if peer_id != f"{host}:{port}":
+        return False
+
+    cpu = peer.get("cpu_percent")
+
+    if cpu is not None and not is_valid_number(cpu, 0, 100):
+        return False
+
+    total_ram = peer.get("total_ram_mb")
+    available_ram = peer.get("available_ram_mb")
+    used_ram = peer.get("used_ram_percent")
+
+    if not is_valid_number(total_ram, 0, float("inf")):
+        return False
+
+    if not is_valid_number(available_ram, 0, float("inf")):
+        return False
+
+    if available_ram > total_ram:
+        return False
+
+    if not is_valid_number(used_ram, 0, 100):
+        return False
+
+    timestamp = peer.get("timestamp")
+
+    if not is_valid_number(timestamp, 0, float("inf")):
+        return False
+
+    return True
+
+
+# ==========================================
 # GOSSIP NODE
 # ==========================================
 
 class GossipNode(asyncio.DatagramProtocol):
 
     def __init__(self, host, port, seed_peers):
-
         self.host = host
         self.port = port
         self.peer_id = f"{host}:{port}"
@@ -157,18 +231,17 @@ class GossipNode(asyncio.DatagramProtocol):
         self.ram_information = {}
 
     def connection_made(self, transport):
-
         self.transport = transport
 
         print("\nMeshWeaver Gossip Node Started")
         print(f"Node ID: {self.peer_id}")
         print(f"Listening on: {self.host}:{self.port}")
-        print("Gossip interval: 5 seconds")
+        print(f"Gossip interval: {GOSSIP_INTERVAL} seconds")
+        print(f"Maximum known peers: {MAX_PEERS}")
 
         asyncio.create_task(self.gossip_loop())
 
     def get_local_information(self):
-
         return {
             "peer_id": self.peer_id,
             "host": self.host,
@@ -178,61 +251,110 @@ class GossipNode(asyncio.DatagramProtocol):
             "timestamp": time.time()
         }
 
+    def add_peer(self, peer):
+        peer_id = peer["peer_id"]
+
+        if peer_id == self.peer_id:
+            return
+
+        if peer_id not in self.known_peers:
+            if len(self.known_peers) >= MAX_PEERS:
+                print("Peer limit reached. Ignoring new peer.")
+                return
+
+        self.known_peers[peer_id] = {
+            **peer,
+            "last_seen": time.time()
+        }
+
     def datagram_received(self, data, addr):
+
+        if len(data) > MAX_MESSAGE_SIZE:
+            print("Rejected oversized gossip message.")
+            return
 
         try:
             message = json.loads(data.decode("utf-8"))
+
+            if not isinstance(message, dict):
+                return
 
             if message.get("type") != "gossip":
                 return
 
             sender = message.get("sender")
 
-            if not isinstance(sender, dict):
+            if not validate_peer(sender):
+                print("Rejected invalid sender information.")
                 return
 
-            print(
-                f"\nGossip received from: "
-                f"{sender.get('peer_id', addr)}"
-            )
+            # Verify that the sender's port matches
+            # the actual UDP source port.
+            if sender["port"] != addr[1]:
+                print("Rejected sender with mismatched port.")
+                return
 
-            for peer in message.get("peers", []):
+            if sender["peer_id"] == self.peer_id:
+                return
 
-                if not isinstance(peer, dict):
+            self.add_peer(sender)
+
+            print(f"\nGossip received from: {sender['peer_id']}")
+
+            peer_list = message.get("peers", [])
+
+            if not isinstance(peer_list, list):
+                return
+
+            if len(peer_list) > MAX_PEERS:
+                print("Rejected oversized peer list.")
+                return
+
+            for peer in peer_list:
+
+                if not validate_peer(peer):
+                    print("Ignored invalid peer information.")
                     continue
 
-                peer_id = peer.get("peer_id")
-                host = peer.get("host")
-                port = peer.get("port")
-
-                if not peer_id or peer_id == self.peer_id:
+                if peer["peer_id"] == self.peer_id:
                     continue
 
-                if not isinstance(host, str):
-                    continue
-
-                if not isinstance(port, int) or not 1 <= port <= 65535:
-                    continue
-
-                self.known_peers[peer_id] = {
-                    **peer,
-                    "last_seen": time.time()
-                }
+                self.add_peer(peer)
 
                 print(
-                    f"Peer: {peer_id} | "
-                    f"CPU: {peer.get('cpu_percent')}% | "
-                    f"RAM: {peer.get('used_ram_percent')}%"
+                    f"Peer: {peer['peer_id']} | "
+                    f"CPU: {peer['cpu_percent']}% | "
+                    f"RAM: {peer['used_ram_percent']}%"
                 )
 
-        except (ValueError, UnicodeDecodeError, TypeError) as error:
+        except (
+            ValueError,
+            UnicodeDecodeError,
+            TypeError,
+            RecursionError
+        ) as error:
             print(f"Invalid gossip message: {error}")
+
+    def remove_stale_peers(self):
+        current_time = time.time()
+
+        stale_peers = [
+            peer_id
+            for peer_id, peer in self.known_peers.items()
+            if current_time - peer["last_seen"] > PEER_TIMEOUT
+        ]
+
+        for peer_id in stale_peers:
+            del self.known_peers[peer_id]
+            print(f"Removed inactive peer: {peer_id}")
 
     async def gossip_loop(self):
 
         while True:
 
             try:
+                self.remove_stale_peers()
+
                 self.cpu_percent = (
                     self.cpu_monitor.get_cpu_usage()
                 )
@@ -264,8 +386,9 @@ class GossipNode(asyncio.DatagramProtocol):
                         (peer["host"], peer["port"])
                     )
 
-                for destination in destinations:
+                destinations.discard((self.host, self.port))
 
+                for destination in destinations:
                     self.transport.sendto(
                         encoded_message,
                         destination
@@ -283,10 +406,14 @@ class GossipNode(asyncio.DatagramProtocol):
                     f"{self.ram_information['used_ram_percent']}%"
                 )
 
+                print(
+                    f"Known peers: {len(self.known_peers)}"
+                )
+
             except (OSError, ValueError, RuntimeError) as error:
                 print(f"Gossip error: {error}")
 
-            await asyncio.sleep(5)
+            await asyncio.sleep(GOSSIP_INTERVAL)
 
 
 # ==========================================
@@ -318,16 +445,39 @@ async def main():
 
     args = parser.parse_args()
 
+    if not 1 <= args.port <= 65535:
+        parser.error("Port must be between 1 and 65535.")
+
     seed_peers = []
 
     for peer in args.peers:
 
-        peer_host, peer_port = peer.rsplit(":", 1)
+        try:
+            peer_host, peer_port = peer.rsplit(":", 1)
+            peer_port = int(peer_port)
 
-        seed_peers.append({
-            "host": peer_host,
-            "port": int(peer_port)
-        })
+            seed = {
+                "peer_id": f"{peer_host}:{peer_port}",
+                "host": peer_host,
+                "port": peer_port
+            }
+
+            if (
+                not peer_host
+                or not 1 <= peer_port <= 65535
+            ):
+                raise ValueError
+
+            seed_peers.append({
+                "host": peer_host,
+                "port": peer_port
+            })
+
+        except ValueError:
+            parser.error(
+                f"Invalid peer format: {peer}. "
+                "Expected HOST:PORT."
+            )
 
     loop = asyncio.get_running_loop()
 

@@ -222,5 +222,38 @@ Learned the basics of the Gossip Protocol, UDP-based peer communication, asynchr
 **Next Day's Plan:**
 Review the Gossip implementation, improve peer information validation, and study how to integrate resource sharing with the existing MeshWeaver architecture.
 
-**Git Commit ID:** Pending
+**Git Commit ID:** 0d9d6fb
 
+---
+
+## Day 7 - Gossip Protocol Validation and Peer Lifecycle Management
+
+**Status:** Completed
+
+**Objective:**
+Improve the existing Gossip Protocol by adding peer validation, inactive peer cleanup, and reviewing the existing MeshWeaver architecture for future integration.
+
+**Files Created or Modified:**
+- `project/MeshWeaver/gossip.py`
+- `WORK_LOG.md`
+
+**Work Performed:**
+- Reviewed the existing main.py, client.py, and server.py files to understand the MeshWeaver UDP architecture.
+- Improved peer information validation for peer IDs, host addresses, port numbers, CPU usage, RAM values, and timestamps.
+- Added checks to reject invalid numeric values and out-of-range resource information.
+- Added a maximum peer limit of 50.
+- Added a maximum UDP message-size check.
+- Implemented inactive peer cleanup after 15 seconds without valid updates.
+- Maintained periodic Gossip communication at five-second intervals.
+- Reviewed possible integration points while keeping the Gossip prototype separate from the existing task execution server.
+
+**Testing and Output:**
+Successfully compiled and tested the updated Gossip implementation using two localhost nodes on ports 10000 and 10001. Verified bidirectional peer discovery and CPU/RAM information exchange every five seconds. Confirmed inactive peer removal after the configured timeout. Also tested valid and invalid peer ports, invalid CPU usage, and invalid RAM usage. All tests produced the expected results.
+
+**Learning Outcome:**
+Learned how peer validation, message-size limits, timeout-based cleanup, and peer lifecycle management improve Gossip communication. Reviewed the existing MeshWeaver task execution architecture and identified that Gossip integration and multi-machine testing are still pending.
+
+**Next Day's Plan:**
+Continue reviewing the MeshWeaver architecture and plan Gossip integration based on the project requirements.
+
+**Git Commit ID:** Pending
