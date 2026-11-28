@@ -154,5 +154,38 @@ Learned how asynchronous programming allows multiple coroutines to make progress
 **Next Day's Plan:**
 Improve task result handling and study how task processing can be organized for the MeshWeaver project.
 
-**Git Commit ID:** Pending                                    
+**Git Commit ID:** 0aaf8a2                                    
 
+
+---
+
+## Day 5 - MeshWeaver Client-Server Communication and Task Execution
+
+**Status:** Completed
+
+**Objective:**
+Understand the actual MeshWeaver UDP client-server architecture and implement sequential task submission with result handling and error reporting.
+
+**Files Created or Modified:**
+- `project/MeshWeaver/client.py`
+- `WORK_LOG.md`
+
+**Work Performed:**
+- Explored the actual MeshWeaver client and server implementation.
+- Understood how UDP communication transfers serialized task data between the client and server.
+- Updated the client to submit multiple arithmetic tasks sequentially.
+- Implemented addition, subtraction, multiplication, and division functions.
+- Processed server responses and tracked successful and failed tasks.
+- Tested exception handling by submitting a division-by-zero task.
+- Verified that the server returned an error response without stopping its execution.
+
+**Testing and Output:**
+Successfully tested four tasks through the local MeshWeaver UDP client-server setup. Addition returned 30, subtraction returned 30, and multiplication returned 50. Division by zero returned an error message. The client correctly reported three successful tasks and one failed task.
+
+**Learning Outcome:**
+Learned how the actual MeshWeaver client sends serialized tasks to a UDP server and receives execution results. Understood sequential task submission, response processing, and error reporting. This test verified basic local client-server task execution. Multi-peer communication, Gossip Protocol, and CPU/RAM sharing are still pending.
+
+**Next Day's Plan:**
+Study peer discovery and implement the basic Gossip Protocol for sharing information between MeshWeaver peers.
+
+**Git Commit ID:** Pending
