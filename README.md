@@ -51,17 +51,13 @@ python Main.py
 
 Testing
 
-Run the three-peer integration test:
+python Test_three_peer_integration.py
 
-python test_three_peer_integration.py
+python Test_queue_error.py
 
 Run the queue error-handling test:
 
 python test_queue_error.py
-
-Run the three-peer DHT test:
-
-python network/test_dht_3peers.py
 
 Expected Results
 
