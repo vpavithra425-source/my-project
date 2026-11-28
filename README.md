@@ -42,11 +42,12 @@ Install the required packages:
 
 pip install cloudpickle psutil
 
-Running the Project
+## Running the Project
 
 Run the main integration program:
 
-python main.py
+```bash
+python Main.py
 
 Testing
 
